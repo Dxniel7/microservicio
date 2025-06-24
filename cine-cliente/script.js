@@ -4,16 +4,18 @@ const peliculas = [];
 
 // Función para obtener las películas
 function obtenerPeliculas() {
-    fetch('app-apigateway-gnabbzdfd8h8g4hd.canadacentral-01.azurewebsites.net/api/peliculas')
+    fetch('https://app-apigateway-gnabbzdfd8h8g4hd.canadacentral-01.azurewebsites.net/api/peliculas')
         .then(response => response.json())
         .then(peliculasData => {
             peliculas.length = 0; // Limpiar el array de películas
+            const selectPelicula = document.getElementById("peliculaSeleccionada");
+            selectPelicula.innerHTML = '<option value="">Selecciona una película</option>'; // Limpiar antes de añadir
             peliculasData.forEach(pelicula => {
                 peliculas.push(pelicula);
                 const option = document.createElement("option");
                 option.value = pelicula.nombre;
                 option.textContent = `${pelicula.nombre} - Stock: ${pelicula.stock}`;
-                document.getElementById("peliculaSeleccionada").appendChild(option);
+                selectPelicula.appendChild(option);
             });
         })
         .catch(error => console.error('Error al obtener las películas', error));
@@ -21,7 +23,7 @@ function obtenerPeliculas() {
 
 // Función para obtener las ventas realizadas
 function obtenerVentas() {
-    fetch('app-apigateway-gnabbzdfd8h8g4hd.canadacentral-01.azurewebsites.net/api/ventas') // Obtener ventas desde el backend
+    fetch('https://app-apigateway-gnabbzdfd8h8g4hd.canadacentral-01.azurewebsites.net/api/ventas') // Obtener ventas desde el backend
         .then(response => response.json())
         .then(ventasData => {
             ventas = ventasData; // Guardar las ventas en el array
@@ -43,7 +45,7 @@ function comprarBoletos() {
     }
 
     // Enviar la compra a la API
-    fetch('app-apigateway-gnabbzdfd8h8g4hd.canadacentral-01.azurewebsites.net/api/compras', {
+    fetch('https://app-apigateway-gnabbzdfd8h8g4hd.canadacentral-01.azurewebsites.net/api/compras', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre_cliente: nombre, cantidad: cantidad, pelicula })
@@ -52,19 +54,18 @@ function comprarBoletos() {
         .then(data => {
             // Verifica si la compra fue exitosa
             if (data.success) {
-                const peliculaSeleccionada = peliculas.find(p => p.nombre === pelicula);
-                if (peliculaSeleccionada) {
-                    peliculaSeleccionada.stock -= cantidad; // Descontamos los boletos en el frontend
-                }
-                actualizarPeliculas(); // Volvemos a renderizar las películas actualizadas en el select
+                // No actualizamos el stock en el frontend directamente.
+                // Llamamos a obtenerPeliculas() para obtener el stock real desde la fuente de verdad (la DB).
+                obtenerPeliculas(); 
                 obtenerVentas(); // Volver a obtener las ventas actualizadas
-                mostrarMensaje(`Compra exitosa de ${cantidad} boletos para la película ${pelicula}.`);
+                mostrarMensaje(`Compra exitosa de ${cantidad} boleto(s) para la película ${pelicula}.`);
             } else {
-                mostrarMensaje(data.error, true); // Mostrar error si la compra falla
+                mostrarMensaje(data.error || 'Ocurrió un error en la compra.', true); // Mostrar error si la compra falla
             }
         })
         .catch(error => {
             mostrarMensaje("Hubo un problema al procesar la compra.", true);
+            console.error("Error en fetch de compra:", error);
         });
 }
 
@@ -99,12 +100,11 @@ function mostrarMensaje(mensaje, error = false) {
 }
 
 // Llamar a obtenerPeliculas y obtenerVentas cada 10 segundos para actualizar el stock y las ventas
-setInterval(obtenerVentas, 10000); // Llamar cada 10 segundos para actualizar las ventas
+// setInterval(obtenerVentas, 10000); // Esto puede ser muy frecuente, lo comentamos por ahora.
 obtenerPeliculas(); // Llamada inicial para obtener las películas
 obtenerVentas(); // Llamada inicial para obtener las ventas
 
-document.addEventListener("DOMContentLoaded", actualizarPeliculas);
-
+// Se elimina el listener duplicado, el de abajo es el correcto.
 
 // --- NUEVO CÓDIGO PARA REGISTRAR EL SERVICE WORKER (PARA PWA) ---
 if ('serviceWorker' in navigator) {
