@@ -1,63 +1,72 @@
-const CACHE_NAME = 'cinefox-cache-v1'; // Nombre de la caché, cámbialo si actualizas los archivos cacheados
+// Service Worker para CineFox
+const CACHE_NAME = 'cinefox-cache-v2';
 const urlsToCache = [
-  '/index.html', //
-  '/style.css', //
-  '/script.js', //
-  // ruta de los icons
+  '/',
+  '/index.html',
+  '/style.css',
+  '/script.js',
   '/icons/fox.png',
   '/icons/ram.png'
 ];
 
-// Evento 'install': Se ejecuta cuando el Service Worker se instala por primera vez.
-// Aquí se abren las cachés y se añaden los recursos estáticos.
+// Instalación del Service Worker
 self.addEventListener('install', event => {
+  console.log('Service Worker: Instalando...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Service Worker: Cache abierta');
-        return cache.addAll(urlsToCache); // Añade todos los URLs especificados a la caché
-      })
-      .catch(error => {
-        console.error('Service Worker: Falló la apertura o adición a la caché', error);
+        console.log('Service Worker: Cache abierta, añadiendo archivos base.');
+        return cache.addAll(urlsToCache);
       })
   );
 });
 
-// Evento 'fetch': Se ejecuta cada vez que el navegador hace una petición de red.
-// Aquí se interceptan las peticiones y se intenta responder desde la caché.
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request) // Intenta encontrar la petición en la caché
-      .then(response => {
-        // Si la petición está en caché, la devuelve
-        if (response) {
-          return response;
-        }
-        // Si no está en caché, la obtiene de la red
-        return fetch(event.request);
-      })
-      .catch(error => {
-        console.error('Service Worker: Falló la petición de fetch', error);
-        // Podrías devolver una página de error offline si la petición falla y no hay caché
-      })
-  );
-});
-
-// Evento 'activate': Se ejecuta cuando el Service Worker se activa.
-// Aquí se puede limpiar cachés antiguas para liberar espacio.
+// Activación del Service Worker - Limpieza de caches viejos
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
+  console.log('Service Worker: Activando...');
+  const cacheWhitelist = [CACHE_NAME]; // Solo la caché actual debe sobrevivir
+
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
+          // Si la caché no está en nuestra lista blanca, se elimina.
           if (cacheWhitelist.indexOf(cacheName) === -1) {
-            // Elimina cachés que no están en la lista blanca actual
             console.log('Service Worker: Eliminando caché antigua:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
+    })
+  );
+});
+
+// Manejo de peticiones con la estrategia "Stale-While-Revalidate"
+self.addEventListener('fetch', event => {
+  // Ignoramos las peticiones que no son GET, como las POST
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // Ignoramos las peticiones a la API para no cachearlas
+  if (event.request.url.includes('/api/')) {
+    return;
+  }
+  
+  event.respondWith(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.match(event.request)
+        .then(cachedResponse => {
+          // Crea una promesa para obtener el recurso de la red
+          const fetchPromise = fetch(event.request).then(networkResponse => {
+            // Si la petición de red es exitosa, la guardamos en caché
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          });
+
+          // Devolvemos la respuesta cacheada si existe, si no, esperamos la de la red. 
+          return cachedResponse || fetchPromise;
+        });
     })
   );
 });
