@@ -1,0 +1,17 @@
+FROM node:18-alpine
+
+# Directorio de trabajo dentro del contenedor
+WORKDIR /usr/src/app
+
+# Copiar los archivos de configuración de npm y package.json
+COPY package*.json ./
+RUN npm install
+
+# Copiar el resto del código de la aplicación
+COPY . .
+
+# Exponer el puerto en el que la aplicación va a correr
+EXPOSE 3002
+
+# El comando para iniciar la aplicación.
+CMD [ "node", "ventas-server.js" ]
