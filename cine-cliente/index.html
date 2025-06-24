@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineFox - Microservicios</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json"> </head>
+<body>
+    <div class="container">
+        <header>
+            <h1>¡Bienvenido a CineFox!</h1>
+            <p>Compra tus boletos fácilmente y sin hacer filas</p>
+        </header>
+
+        <div class="content">
+            <h2>Seleccionar Película:</h2>
+            <select id="peliculaSeleccionada" class="input-field">
+                <option value="">Selecciona una película</option>
+            </select>
+
+            <h3>Comprar Boletos:</h3>
+            <div class="input-container">
+                <input type="text" id="nombreCliente" placeholder="Tu nombre" class="input-field">
+                <input type="number" id="cantidadBoletos" placeholder="Cantidad" class="input-field" min="1">
+            </div>
+            <button onclick="comprarBoletos()" class="btn">Comprar Boletos</button>
+
+            <p id="mensaje"></p>
+
+            <h3>Ventas Realizadas:</h3>
+            <ul id="listaVentas"></ul>
+        </div>
+    </div>
+    <script src="script.js"></script>   
+</body>
+</html>

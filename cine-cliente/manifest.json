@@ -1,0 +1,21 @@
+{
+  "name": "CineFox App",
+  "short_name": "CineFox",
+  "description": "Compra tus boletos de cine fácilmente",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#c6e2ff",
+  "theme_color": "#FF7E5F",
+  "icons": [
+    {
+      "src": "icons/fox.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/ram.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

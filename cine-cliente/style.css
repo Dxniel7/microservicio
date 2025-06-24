@@ -1,0 +1,108 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(45deg, #a0c4ff, #c6e2ff);
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
+}
+.container {
+    max-width: 600px;
+    width: 100%;
+    padding: 30px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+header {
+    margin-bottom: 30px;
+    background: linear-gradient(45deg, #FF7E5F, #FEB47B);
+    padding: 20px;
+    border-radius: 10px;
+}
+header h1 {
+    font-size: 2.5em;
+    color: white;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+header p {
+    color: #fff;
+    font-size: 1.1em;
+}
+.content {
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+}
+h2, h3 {
+    color: #333;
+    margin-top: 20px;
+    font-size: 1.5em;
+    font-weight: 600;
+}
+.input-field {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1.1em;
+    transition: border-color 0.3s ease;
+}
+.input-field:focus {
+    border-color: #3498db;
+    outline: none;
+}
+.input-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+.btn {
+    background: linear-gradient(45deg, #6A82FB, #FC5C7D);
+    color: white;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.btn:hover {
+    background: linear-gradient(45deg, #FC5C7D, #6A82FB);
+}
+#mensaje {
+    margin-top: 20px;
+    color: green;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+#listaVentas {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+#listaVentas li {
+    background: #ecf0f1;
+    margin: 5px 0;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    color: #333;
+    transition: background-color 0.3s ease;
+}
+#listaVentas li:hover {
+    background: #dfe6e9;
+}
