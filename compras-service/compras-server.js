@@ -35,26 +35,14 @@ app.use(morgan('combined', {
 }));
 
 // --- Configuración de la Conexión a la Base de Datos con Sequelize ---
-// --- Configuración de la Conexión a la Base de Datos con Sequelize ---
-const sequelize = new Sequelize(
-    process.env.DB_NAME,    // Nombre de la base de datos
-    process.env.DB_USER,    // Usuario
-    process.env.DB_PASS,    // Contraseña
-    {
-        host: process.env.DB_HOST, // Host del servidor de base de datos
-        dialect: 'mysql',
-        logging: msg => logger.info(msg),
-        define: {
-            timestamps: false
-        },
-        dialectOptions: { // <-- AÑADIR ESTA SECCIÓN IMPORTANTE
-            ssl: {
-                require: true,
-                rejectUnauthorized: false
-            }
-        }
+const sequelize = new Sequelize('cineboletos', 'root', 'root', { // Base de datos, Usuario, Contraseña
+    host: 'localhost',
+    dialect: 'mysql', // Tipo de base de datos
+    logging: msg => logger.info(msg), // Mostrar logs de Sequelize
+    define: {
+        timestamps: false // Deshabilita las columnas createdAt y updatedAt por defecto en todos los modelos
     }
-);
+});
 
 // --- Definición del Modelo Pelicula (para interacciones de stock) ---
 const Pelicula = sequelize.define('Pelicula', {
