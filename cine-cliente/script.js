@@ -4,7 +4,7 @@ const peliculas = [];
 
 // Función para obtener las películas
 function obtenerPeliculas() {
-    fetch('http://localhost:3000/api/peliculas')
+    fetch('app-apigateway-gnabbzdfd8h8g4hd.canadacentral-01.azurewebsites.net/api/peliculas')
         .then(response => response.json())
         .then(peliculasData => {
             peliculas.length = 0; // Limpiar el array de películas
@@ -21,7 +21,7 @@ function obtenerPeliculas() {
 
 // Función para obtener las ventas realizadas
 function obtenerVentas() {
-    fetch('http://localhost:3000/api/ventas') // Obtener ventas desde el backend
+    fetch('app-apigateway-gnabbzdfd8h8g4hd.canadacentral-01.azurewebsites.net/api/ventas') // Obtener ventas desde el backend
         .then(response => response.json())
         .then(ventasData => {
             ventas = ventasData; // Guardar las ventas en el array
@@ -43,7 +43,7 @@ function comprarBoletos() {
     }
 
     // Enviar la compra a la API
-    fetch('http://localhost:3000/api/compras', {
+    fetch('app-apigateway-gnabbzdfd8h8g4hd.canadacentral-01.azurewebsites.net/api/compras', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre_cliente: nombre, cantidad: cantidad, pelicula })
