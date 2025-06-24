@@ -1,0 +1,31 @@
+name: Construir y Subir - API Gateway
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'apigateway/**' # Se activa solo si hay cambios en esta carpeta
+
+env:
+  # Asegúrate de que este valor coincida EXACTAMENTE con tu servidor de ACR
+  ACR_LOGIN_SERVER: acrcinefox.azurecr.io
+  IMAGE_NAME: apigateway
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Login a Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Construir y subir imagen a ACR
+        run: |
+          docker build ./apigateway -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
