@@ -1,157 +1,68 @@
-const express = require('express');
-const { Sequelize, DataTypes } = require('sequelize'); // Importamos Sequelize y DataTypes
-const cors = require('cors');
-const morgan = require('morgan');
-const winston = require('winston');
+const express_ventas = require('express');
+const { Sequelize: Sequelize_ventas, DataTypes: DataTypes_ventas } = require('sequelize');
+const cors_ventas = require('cors');
+const morgan_ventas = require('morgan');
+const winston_ventas = require('winston');
 
-const app = express();
-const port = 3002; // Puerto en el que escucha este microservicio
+const app_ventas = express_ventas();
+const port_ventas = process.env.PORT || 3002;
 
-// Habilitar CORS para permitir solicitudes desde el frontend
-app.use(cors());
-// Habilitar el parsing de JSON en las solicitudes
-app.use(express.json());
+app_ventas.use(cors_ventas());
+app_ventas.use(express_ventas.json());
 
-// Configuración del Logger (Winston)
-const logger = winston.createLogger({
-    level: 'info', // Nivel mínimo de logs a guardar
-    format: winston.format.combine(
-        winston.format.timestamp(), // Añadir fecha y hora al log
-        winston.format.printf(({ timestamp, level, message }) => {
-            return `[${timestamp}] ${level.toUpperCase()}: ${message}`;
-        })
+const logger_ventas = winston_ventas.createLogger({
+    level: 'info',
+    format: winston_ventas.format.combine(
+        winston_ventas.format.timestamp(),
+        winston_ventas.format.printf(({ timestamp, level, message }) => `[${timestamp}] ${level.toUpperCase()}: ${message}`)
     ),
-    transports: [
-        new winston.transports.Console(), // Mostrar logs en la consola
-        new winston.transports.File({ filename: 'logs/errores.log', level: 'error' }), // Guardar errores en un archivo
-        new winston.transports.File({ filename: 'logs/todo.log' }) // Guardar todos los logs en otro archivo
-    ]
+    transports: [ new winston_ventas.transports.Console() ]
 });
 
-// Middleware para logs de solicitudes HTTP (Morgan)
-app.use(morgan('combined', {
-    stream: { write: (msg) => logger.info(msg.trim()) } // Redirigir logs de Morgan a Winston
-}));
+app_ventas.use(morgan_ventas('combined', { stream: { write: (message) => logger_ventas.info(message.trim()) } }));
 
-// --- Configuración de la Conexión a la Base de Datos con Sequelize ---
-// --- Configuración de la Conexión a la Base de Datos con Sequelize ---
-const sequelize = new Sequelize(
-    process.env.DB_NAME,    // Nombre de la base de datos
-    process.env.DB_USER,    // Usuario
-    process.env.DB_PASS,    // Contraseña
+const sequelize_ventas = new Sequelize_ventas(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASS,
     {
-        host: process.env.DB_HOST, // Host del servidor de base de datos
+        host: process.env.DB_HOST,
         dialect: 'mysql',
-        logging: msg => logger.info(msg),
-        define: {
-            timestamps: false
-        },
-        dialectOptions: { // <-- AÑADIR ESTA SECCIÓN IMPORTANTE
-            ssl: {
-                require: true,
-                rejectUnauthorized: false
-            }
-        }
+        logging: msg => logger_ventas.info(msg),
+        define: { timestamps: false },
+        dialectOptions: { ssl: { require: true, rejectUnauthorized: false } }
     }
 );
 
-// --- Definición del Modelo Venta (dentro del mismo archivo) ---
-const Venta = sequelize.define('Venta', {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true
-    },
-    nombre_cliente: {
-        type: DataTypes.STRING(255),
-        allowNull: false
-    },
-    cantidad: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-    },
-    pelicula: {
-        type: DataTypes.STRING(255),
-        allowNull: false
-    },
-    // Opcional: podrías añadir una columna para la fecha de la venta
-    // fecha_venta: {
-    //     type: DataTypes.DATE,
-    //     defaultValue: DataTypes.NOW
-    // }
-}, {
-    tableName: 'ventas', // Asegura que la tabla en la DB se llame 'ventas'
-    timestamps: false // No crear columnas 'createdAt' y 'updatedAt' automáticamente
-});
+const Venta_Model = sequelize_ventas.define('Venta', {
+    id: { type: DataTypes_ventas.INTEGER, autoIncrement: true, primaryKey: true },
+    nombre_cliente: { type: DataTypes_ventas.STRING(255), allowNull: false },
+    cantidad: { type: DataTypes_ventas.INTEGER, allowNull: false },
+    pelicula: { type: DataTypes_ventas.STRING(255), allowNull: false }
+}, { tableName: 'ventas', timestamps: false });
 
-
-// --- Sincronización de la Base de Datos y el Modelo ---
-// Esto intentará conectar a MySQL y, si tiene éxito, creará/actualizará la tabla 'ventas'.
-sequelize.authenticate()
+sequelize_ventas.authenticate()
     .then(() => {
-        logger.info('Ventas: Conectado a MySQL con Sequelize.');
-        return sequelize.sync({ alter: true }); // <--- ¡Aquí se crea/actualiza la tabla!
+        logger_ventas.info('Ventas: Conectado a MySQL con Sequelize.');
+        return sequelize_ventas.sync({ alter: true });
     })
     .then(() => {
-        logger.info('Ventas: Tabla "ventas" sincronizada (creada/actualizada) correctamente.');
-
-        // Opcional: Insertar algunos datos de ejemplo si la tabla está vacía
-        // Comenta o elimina esto si no quieres que inserte datos cada vez en desarrollo.
-        return Venta.count();
-    })
-    .then(count => {
-        if (count === 0) {
-            logger.info('Insertando datos iniciales en la tabla ventas...');
-            return Venta.bulkCreate([
-                { nombre_cliente: 'Ana Lopez', cantidad: 2, pelicula: 'Spiderman: De Regreso a Casa' },
-                { nombre_cliente: 'Juan Perez', cantidad: 1, pelicula: 'Doctor Strange en el Multiverso de la Locura' },
-                { nombre_cliente: 'Maria Garcia', cantidad: 3, pelicula: 'Guardianes de la la Galaxia Vol. 3' }
-            ]);
-        }
-    })
-    .then(() => {
-        logger.info('Datos iniciales de ventas asegurados.');
-
-        // Iniciar el servidor Express solo después de que la DB esté lista
-        app.listen(port, () => {
-            logger.info(`Ventas escuchando en http://localhost:${port}`);
+        logger_ventas.info('Ventas: Tabla sincronizada.');
+        app_ventas.listen(port_ventas, () => {
+            logger_ventas.info(`Ventas escuchando en el puerto ${port_ventas}`);
         });
     })
     .catch(err => {
-        logger.error('Error al conectar/sincronizar la base de datos con Sequelize: ' + err.message);
-        process.exit(1); // Salir de la aplicación si hay un problema crítico con la DB
+        logger_ventas.error('Error al conectar/sincronizar la DB: ' + err.message);
+        process.exit(1);
     });
 
-
-// --- Ruta GET /ventas ---
-// Esta ruta devuelve todas las ventas de la base de datos usando el modelo Venta
-app.get('/ventas', (req, res) => {
-    Venta.findAll() // Equivalente a SELECT * FROM ventas
-        .then(ventas => {
-            logger.info('Ventas consultadas correctamente');
-            res.json(ventas);
-        })
-        .catch(err => {
-            logger.error('Error al obtener ventas con Sequelize: ' + err.message);
-            res.status(500).send('Error');
-        });
+app_ventas.get('/ventas', async (req, res) => {
+    try {
+        const ventas = await Venta_Model.findAll();
+        res.json(ventas);
+    } catch (err) {
+        logger_ventas.error('Error al obtener ventas: ' + err.message);
+        res.status(500).send('Error');
+    }
 });
-
-// --- Ruta DELETE /limpiarVentas ---
-// Esta ruta elimina todas las ventas de la base de datos usando el modelo Venta
-app.delete('/limpiarVentas', (req, res) => {
-    Venta.destroy({
-        truncate: true // Borra todos los registros de la tabla y resetea auto-increment
-    })
-        .then(() => {
-            logger.info('Ventas eliminadas correctamente');
-            res.send('Historial de ventas limpio');
-        })
-        .catch(err => {
-            logger.error('Error al limpiar ventas con Sequelize: ' + err.message);
-            res.status(500).send('Error');
-        });
-});
-
-// El `app.listen` se ha movido dentro del .then() de la sincronización de la DB
-// para asegurar que el servidor no inicie hasta que la conexión y tabla estén listas.

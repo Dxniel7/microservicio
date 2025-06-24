@@ -1,98 +1,55 @@
-const express = require('express');
-const { Sequelize, DataTypes } = require('sequelize'); // Importamos Sequelize y DataTypes
-const cors = require('cors');
-const morgan = require('morgan');
-const winston = require('winston');
+const express_peliculas = require('express');
+const { Sequelize: Sequelize_peliculas, DataTypes: DataTypes_peliculas } = require('sequelize');
+const cors_peliculas = require('cors');
+const morgan_peliculas = require('morgan');
+const winston_peliculas = require('winston');
 
-const app = express();
-const port = 3001; // Puerto en el que escucha este microservicio
+const app_peliculas = express_peliculas();
+const port_peliculas = process.env.PORT || 3001;
 
-// Habilitar CORS para permitir solicitudes desde el frontend
-app.use(cors());
-// Habilitar el parsing de JSON en las solicitudes
-app.use(express.json());
+app_peliculas.use(cors_peliculas());
+app_peliculas.use(express_peliculas.json());
 
-// Configuración del Logger (Winston)
-const logger = winston.createLogger({
-    level: 'info', // Nivel mínimo de logs a guardar
-    format: winston.format.combine(
-        winston.format.timestamp(), // Añadir fecha y hora al log
-        winston.format.printf(({ timestamp, level, message }) => {
-            return `[${timestamp}] ${level.toUpperCase()}: ${message}`;
-        })
+const logger_peliculas = winston_peliculas.createLogger({
+    level: 'info',
+    format: winston_peliculas.format.combine(
+        winston_peliculas.format.timestamp(),
+        winston_peliculas.format.printf(({ timestamp, level, message }) => `[${timestamp}] ${level.toUpperCase()}: ${message}`)
     ),
-    transports: [
-        new winston.transports.Console(), // Mostrar logs en la consola
-        new winston.transports.File({ filename: 'logs/errores.log', level: 'error' }), // Guardar errores en un archivo
-        new winston.transports.File({ filename: 'logs/todo.log' }) // Guardar todos los logs en otro archivo
-    ]
+    transports: [ new winston_peliculas.transports.Console() ]
 });
 
-// Middleware para logs de solicitudes HTTP (Morgan)
-app.use(morgan('combined', {
-    stream: { write: (msg) => logger.info(msg.trim()) } // Redirigir logs de Morgan a Winston
-}));
+app_peliculas.use(morgan_peliculas('combined', { stream: { write: (message) => logger_peliculas.info(message.trim()) } }));
 
-// --- Configuración de la Conexión a la Base de Datos con Sequelize ---
-// --- Configuración de la Conexión a la Base de Datos con Sequelize ---
-const sequelize = new Sequelize(
-    process.env.DB_NAME,    // Nombre de la base de datos
-    process.env.DB_USER,    // Usuario
-    process.env.DB_PASS,    // Contraseña
+const sequelize_peliculas = new Sequelize_peliculas(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASS,
     {
-        host: process.env.DB_HOST, // Host del servidor de base de datos
+        host: process.env.DB_HOST,
         dialect: 'mysql',
-        logging: msg => logger.info(msg),
-        define: {
-            timestamps: false
-        },
-        dialectOptions: { // <-- AÑADIR ESTA SECCIÓN IMPORTANTE
-            ssl: {
-                require: true,
-                rejectUnauthorized: false
-            }
-        }
+        logging: msg => logger_peliculas.info(msg),
+        define: { timestamps: false },
+        dialectOptions: { ssl: { require: true, rejectUnauthorized: false } }
     }
 );
 
-// --- Definición del Modelo Pelicula (dentro del mismo archivo) ---
-const Pelicula = sequelize.define('Pelicula', {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true
-    },
-    nombre: {
-        type: DataTypes.STRING(255), // VARCHAR(255) en SQL
-        allowNull: false // NOT NULL en SQL
-    },
-    stock: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0 // DEFAULT 0 en SQL
-    }
-}, {
-    tableName: 'peliculas', // Asegura que la tabla en la DB se llame 'peliculas'
-    timestamps: false // Deshabilita las columnas createdAt y updatedAt solo para este modelo
-});
+const Pelicula_Model = sequelize_peliculas.define('Pelicula', {
+    id: { type: DataTypes_peliculas.INTEGER, autoIncrement: true, primaryKey: true },
+    nombre: { type: DataTypes_peliculas.STRING(255), allowNull: false },
+    stock: { type: DataTypes_peliculas.INTEGER, allowNull: false, defaultValue: 0 }
+}, { tableName: 'peliculas', timestamps: false });
 
-// --- Sincronización de la Base de Datos y el Modelo ---
-// Esto intentará conectar a MySQL y, si tiene éxito, creará/actualizará la tabla 'peliculas'.
-sequelize.authenticate()
+sequelize_peliculas.authenticate()
     .then(() => {
-        logger.info('Películas: Conectado a MySQL con Sequelize.');
-        return sequelize.sync({ alter: true }); // <--- ¡Aquí se crea/actualiza la tabla!
+        logger_peliculas.info('Películas: Conectado a MySQL con Sequelize.');
+        return sequelize_peliculas.sync({ alter: true });
     })
-    .then(() => {
-        logger.info('Películas: Tabla "peliculas" sincronizada (creada/actualizada) correctamente.');
-
-        // Opcional: Insertar datos iniciales si la tabla está vacía
-        return Pelicula.count(); // Contamos cuántas películas hay
-    })
+    .then(() => Pelicula_Model.count())
     .then(count => {
         if (count === 0) {
-            logger.info('Insertando datos iniciales en la tabla peliculas...');
-            return Pelicula.bulkCreate([
+            logger_peliculas.info('Insertando datos iniciales de películas...');
+            return Pelicula_Model.bulkCreate([
                 { nombre: 'Spiderman: De Regreso a Casa', stock: 50 },
                 { nombre: 'Doctor Strange en el Multiverso de la Locura', stock: 40 },
                 { nombre: 'Guardianes de la la Galaxia Vol. 3', stock: 60 },
@@ -101,32 +58,22 @@ sequelize.authenticate()
         }
     })
     .then(() => {
-        logger.info('Datos iniciales de películas asegurados.');
-
-        // Iniciar el servidor Express solo después de que la DB esté lista
-        app.listen(port, () => {
-            logger.info(`Películas escuchando en http://localhost:${port}`);
+        logger_peliculas.info('Películas: Tabla sincronizada y datos asegurados.');
+        app_peliculas.listen(port_peliculas, () => {
+            logger_peliculas.info(`Películas escuchando en el puerto ${port_peliculas}`);
         });
     })
     .catch(err => {
-        logger.error('Error al conectar/sincronizar la base de datos con Sequelize: ' + err.message);
-        process.exit(1); // Salir de la aplicación si hay un problema crítico con la DB
+        logger_peliculas.error('Error al conectar/sincronizar la DB: ' + err.message);
+        process.exit(1);
     });
 
-
-// --- Ruta GET /peliculas ---
-// Ahora usamos el modelo Pelicula de Sequelize para consultar los datos
-app.get('/peliculas', (req, res) => {
-    Pelicula.findAll() // Equivalente a SELECT * FROM peliculas
-        .then(peliculas => {
-            logger.info('Películas consultadas correctamente');
-            res.json(peliculas);
-        })
-        .catch(err => {
-            logger.error('Error al obtener películas con Sequelize: ' + err.message);
-            res.status(500).send('Error');
-        });
+app_peliculas.get('/peliculas', async (req, res) => {
+    try {
+        const peliculas = await Pelicula_Model.findAll();
+        res.json(peliculas);
+    } catch (err) {
+        logger_peliculas.error('Error al obtener películas: ' + err.message);
+        res.status(500).send('Error');
+    }
 });
-
-// El `app.listen` se ha movido dentro del .then() de la sincronización de la DB
-// para asegurar que el servidor no inicie hasta que la conexión y tabla estén listas.
